@@ -12,17 +12,17 @@ Path Type: max
    0.000    1.000 ^ _094_/RESET_B (sky130_fd_sc_hd__dfrtp_1)
             1.000   data arrival time
 
-   2.980    2.980   clock clk (rise edge)
-   0.000    2.980   clock network delay (ideal)
-   0.000    2.980   clock reconvergence pessimism
-            2.980 ^ _094_/CLK (sky130_fd_sc_hd__dfrtp_1)
-   0.228    3.208   library recovery time
-            3.208   data required time
+   2.600    2.600   clock clk (rise edge)
+   0.000    2.600   clock network delay (ideal)
+   0.000    2.600   clock reconvergence pessimism
+            2.600 ^ _094_/CLK (sky130_fd_sc_hd__dfrtp_1)
+   0.228    2.828   library recovery time
+            2.828   data required time
 -----------------------------------------------------------
-            3.208   data required time
+            2.828   data required time
            -1.000   data arrival time
 -----------------------------------------------------------
-            2.208   slack (MET)
+            1.828   slack (MET)
 
 
 Startpoint: _106_ (rising edge-triggered flip-flop clocked by clk)
@@ -47,16 +47,16 @@ Path Type: max
    0.000    2.471 v _100_/D (sky130_fd_sc_hd__dfrtp_1)
             2.471   data arrival time
 
-   2.980    2.980   clock clk (rise edge)
-   0.000    2.980   clock network delay (ideal)
-   0.000    2.980   clock reconvergence pessimism
-            2.980 ^ _100_/CLK (sky130_fd_sc_hd__dfrtp_1)
-  -0.134    2.846   library setup time
-            2.846   data required time
+   2.600    2.600   clock clk (rise edge)
+   0.000    2.600   clock network delay (ideal)
+   0.000    2.600   clock reconvergence pessimism
+            2.600 ^ _100_/CLK (sky130_fd_sc_hd__dfrtp_1)
+  -0.134    2.466   library setup time
+            2.466   data required time
 -----------------------------------------------------------
-            2.846   data required time
+            2.466   data required time
            -2.471   data arrival time
 -----------------------------------------------------------
-            0.376   slack (MET)
+           -0.004   slack (VIOLATED)
 
 
