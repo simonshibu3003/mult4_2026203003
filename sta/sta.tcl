@@ -1,5 +1,5 @@
 set lib $::env(PDK_ROOT)/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib
-set T 10.0
+set T 2.6
 if {[info exists ::env(T)]} { set T $::env(T) }
 
 read_liberty $lib
