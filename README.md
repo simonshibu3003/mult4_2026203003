@@ -3,6 +3,9 @@
 Name: Simon Shibu
 Roll number: 2026203003
 
+Name: Akshath Agarwal
+Roll number: 2026203014
+
 Environment: IIC-OSIC-TOOLS Docker container on macOS (Apple Silicon).
 PDK sky130A, standard cell library sky130_fd_sc_hd.
 Commands run inside the container from /foss/designs/mult4_2026203003 unless stated.
