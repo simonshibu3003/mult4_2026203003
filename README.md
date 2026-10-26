@@ -3,7 +3,7 @@
 Name: Simon Shibu
 Roll number: 2026203003
 
-Name: Akshath Agarwal
+Name: Akshat Agrawal
 Roll number: 2026203014
 
 Environment: IIC-OSIC-TOOLS Docker container on macOS (Apple Silicon).
