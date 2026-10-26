@@ -103,13 +103,9 @@ Netlist simulation with the same testbench:
     git add synth/synth.tcl synth/mult_array_netlist.v
     git commit -m "Adding the tcl script and the gate level netlist"
 
-    git add synth/mult_array_stat.rpt
-    git commit -m "Adding the synthesis report"
+(synth/mult_array_stat.rpt was committed later, in the "Add the synthesis report" commit listed at the end of Part D.)
 
-    git add synth/mult_array_stat.rpt
-    git commit -m "Add the synthesis report"
-
-The first run failed because the testbench checked p 1 ns after the clock edge, while the cell models with UNIT_DELAY=#1 update the flip-flop outputs 1 ns after the edge. The check delay in tb/tb_mult.v was changed from #1 to #3, and then both the RTL and the netlist simulation print PASS: 256 vectors checked, 0 errors.
+The first netlist-simulation run failed because the testbench checked p 1 ns after the clock edge, while the cell models with UNIT_DELAY=#1 update the flip-flop outputs 1 ns after the edge. The check delay in tb/tb_mult.v was changed from #1 to #3 (the committed testbench, from the "Add testbench" commit, already uses #3), and then both the RTL and the netlist simulation print PASS: 256 vectors checked, 0 errors.
 
 ## Part C: Static timing analysis with OpenSTA
 
@@ -122,7 +118,7 @@ The worst slack was obtained using:
 
 Worst slack at T = 10 ns is 7.396 ns, so T_min = 10 - 7.396 = 2.604 ns and F_max = 1000 / 2.604 = 384.0 MHz.
 
-The T value was then changed to T_min (2.6 ns, rounded to 0.1 ns) by editing sta/sta.tcl, and the same command was run again. At T = 2.6 ns the setup slack is -0.004 ns (VIOLATED), which is expected because T_min is 2.604 ns, so the slack is close to zero. The committed sta/mult_array_timing.rpt is the T = 2.6 ns report. The report from the T = 10 ns run is kept outside the repository (it was used only to find T_min).
+The T value was then changed to T_min rounded to 0.01 ns (2.60 ns) by editing sta/sta.tcl, and the same command was run again. At T = 2.60 ns the setup slack is -0.004 ns (VIOLATED), which is expected because T_min is 2.604 ns, so the slack is close to zero. The committed sta/mult_array_timing.rpt is the T = 2.60 ns report. The report from the T = 10 ns run is kept outside the repository (it was used only to find T_min).
 
 The critical path runs from flip-flop _106_ to flip-flop _100_ (arrival 2.471 ns at T = 10 ns): dfrtp_1 (clk-to-Q), and2_0, or3_1, a32oi_1, o21ba_1, xnor2_1, maj3_1, maj3_1, xnor3_1, followed by the flip-flop setup time of 0.134 ns.
 
@@ -130,11 +126,19 @@ The cells on the critical path were listed from the report with:
 
     awk '/Path Group: clk/,/data arrival time/' sta/mult_array_timing.rpt > /foss/designs/mult4_notes/critical_path_cells.txt
 
-    git add sta/sta.tcl sta/mult_array_timing.rpt
+    git add sta/mult_array_timing.rpt
+    git commit -m "Adding the synthesis report"
+    git add sta/sta.tcl
     git commit -m "Add OpenSTA script and timing report"
 
-    git add sta/mult_array_timing.rpt
+(The first of these two commits holds the T = 10 ns timing report; its message should have said "timing report".)
+
+The T = 2.60 ns report was first saved as sta/mult_array_timing_T2.6.rpt:
+
+    git add sta/mult_array_timing_T2.6.rpt
     git commit -m "Add timing report for T=T_min"
+
+It then replaced sta/mult_array_timing.rpt in the "Update LibreLane config (7.0 ns), metrics and GDS" commit (see Part D), and the default clock period in sta/sta.tcl was set to T_min:
 
     git add sta/sta.tcl
     git commit -m "Set default clock period in sta.tcl to T_min = 2.6 ns"
@@ -143,7 +147,7 @@ The cells on the critical path were listed from the report with:
 
 - pnr/config.json (written on the device, copied into ~/eda/designs/mult4_2026203003/pnr/)
 
-pnr/config.json was first written with CLOCK_PERIOD 3.5 ns; the period was raised by 0.5 ns after every failed run until the flow completed at 7.0 ns:
+pnr/config.json was first written with CLOCK_PERIOD 3.5 ns; after each failed run the period was increased in 0.5 ns steps until the flow completed at 7.0 ns (eight runs, listed below in the order they were made):
 
     {
       "DESIGN_NAME": "mult_array",
@@ -156,7 +160,7 @@ pnr/config.json was first written with CLOCK_PERIOD 3.5 ns; the period was raise
 
 CLOCK_PERIOD = 1.2 x T_min = 1.2 x 2.604 = 3.1248 ns, rounded up to the next 0.5 ns, so 3.5 ns.
 
-Run 1: CLOCK_PERIOD = 3.5 ns.
+Run 1: CLOCK_PERIOD = 3.5 ns (runs/RUN_2026-10-19_12-15-30).
 
     echo "pnr/runs" >> .git/info/exclude
     sak-pdk sky130A
@@ -174,47 +178,47 @@ output:
 
     "timing__setup__ws": -2.1179485431597547
 
-Increasing the clock period by 0.5 ns after each run to remove timing violations (CLOCK_PERIOD edited in pnr/config.json, then librelane config.json run again).
+In this setup LibreLane checks setup timing at every corner (TIMING_VIOLATION_CORNERS = ["*"] in runs/<run>/resolved.json), so the flow stops when any slow corner has a setup violation. The clock period was then increased in 0.5 ns steps to remove the violations (CLOCK_PERIOD edited in pnr/config.json, then librelane config.json run again). Run 3 was made at 5.0 ns before run 4 at 4.5 ns.
 
-Run 2: CLOCK_PERIOD = 4.0 ns.
+Run 2: CLOCK_PERIOD = 4.0 ns (runs/RUN_2026-10-19_12-27-42).
 
 Result: Setup violations found in max_ss_100C_1v60, min_ss_100C_1v60 and nom_ss_100C_1v60.
 
     "timing__setup__ws": -1.5941133309034252
 
-Run 3: CLOCK_PERIOD = 4.5 ns.
-
-Result: Setup violations found in max_ss_100C_1v60, min_ss_100C_1v60 and nom_ss_100C_1v60.
-
-    "timing__setup__ws": -1.123404068234753
-
-Run 4: CLOCK_PERIOD = 5.0 ns.
+Run 3: CLOCK_PERIOD = 5.0 ns (runs/RUN_2026-10-19_12-33-50).
 
 Result: Setup violations found in max_ss_100C_1v60, min_ss_100C_1v60 and nom_ss_100C_1v60.
 
     "timing__setup__ws": -0.6216338730830749
 
-Run 5: CLOCK_PERIOD = 5.5 ns.
+Run 4: CLOCK_PERIOD = 4.5 ns (runs/RUN_2026-10-19_12-40-44).
+
+Result: Setup violations found in max_ss_100C_1v60, min_ss_100C_1v60 and nom_ss_100C_1v60.
+
+    "timing__setup__ws": -1.123404068234753
+
+Run 5: CLOCK_PERIOD = 5.5 ns (runs/RUN_2026-10-19_12-44-33).
 
 Result: Setup violations found in max_ss_100C_1v60, min_ss_100C_1v60 and nom_ss_100C_1v60.
 
     "timing__setup__ws": -0.1216338175719222
 
-Run 6: CLOCK_PERIOD = 6.0 ns.
+Run 6: CLOCK_PERIOD = 6.0 ns (runs/RUN_2026-10-19_12-47-47).
 
 Result: Setup violations found in max_ss_100C_1v60, min_ss_100C_1v60 and nom_ss_100C_1v60.
 
     "timing__setup__ws": -0.16627588665466367
 
-(The slack at 6.0 ns is worse than at 5.5 ns: the P&R tools optimise on a faster corner and the ss corner is only checked at signoff, so the slack does not improve smoothly with the period.)
+(The slack at 6.0 ns is worse than at 5.5 ns because timing repair runs before detailed routing: at 5.5 ns the post-CTS repair step still saw violations and kept speeding up the path ("[RSZ-0062] Unable to repair all setup violations" in its log), while at 6.0 ns it saw none and stopped, so after routing, with the real wire parasitics, the 6.0 ns layout ended slightly worse.)
 
-Run 7: CLOCK_PERIOD = 6.5 ns.
+Run 7: CLOCK_PERIOD = 6.5 ns (runs/RUN_2026-10-19_12-52-00).
 
 Result: Setup violations found in max_ss_100C_1v60.
 
     "timing__setup__ws": -0.0346909177869835
 
-Run 8: CLOCK_PERIOD = 7.0 ns.
+Run 8: CLOCK_PERIOD = 7.0 ns (runs/RUN_2026-10-19_12-56-23).
 
 Result: Flow complete (no setup or hold violations, DRC 0, LVS 0).
 
@@ -223,9 +227,14 @@ Result: Flow complete (no setup or hold violations, DRC 0, LVS 0).
 The committed pnr/config.json is the final one (CLOCK_PERIOD = 7.0 ns), and pnr/metrics.json and pnr/mult_array.gds are the files from the final/ folder of this run (RUN_2026-10-19_12-56-23).
 
 
-Copying the deliverables (manually done) and reading the results using terminal (the runs/ folder is not committed):
+The two deliverables were copied by hand from the final/ folder of this run into pnr/ (the runs/ folder is not committed). The equivalent commands, run from pnr/, are:
 
     R=runs/RUN_2026-10-19_12-56-23
+    cp $R/final/metrics.json metrics.json
+    cp $R/final/gds/mult_array.gds mult_array.gds
+
+Reading the results in the terminal:
+
     grep -E "instance__count|core__area|die__area|wirelength|setup__ws|hold__ws|drc|lvs" $R/final/metrics.json
     grep -o "sky130_fd_sc_hd__[a-z0-9_]*" $R/final/nl/mult_array.nl.v | sort | uniq -c | sort -rn
     grep -i "cells" $R/06-yosys-synthesis/reports/stat.rpt
@@ -243,12 +252,18 @@ Layout screenshots were taken in KLayout (full hierarchy view; texts, grid and c
     git add synth/mult_array_stat.rpt
     git commit -m "Add the synthesis report"
 
-    git add pnr/config.json pnr/metrics.json pnr/mult_array.gds
+    git add pnr/config.json pnr/metrics.json pnr/mult_array.gds sta/
     git commit -m "Update LibreLane config (7.0 ns), metrics and GDS"
 
-(The first two pnr commits contain the intermediate files from an earlier, failing run; the last commit replaces them with the final 7.0 ns run.)
+(The first two pnr commits contain the intermediate files from an earlier, failing run; the last commit replaces them with the final 7.0 ns run. The same commit also replaced sta/mult_array_timing.rpt with the T = 2.60 ns report and removed sta/mult_array_timing_T2.6.rpt; see Part C.)
 
 ## Report
 
     git add report/report.pdf
-    git commit -m "Add report"
+    git commit -m "Add the final report"
+    git add README.md
+    git commit -m "Add the README file"
+    git add README.md
+    git commit -m "Add the final readme"
+    git add report/report.pdf
+    git commit -m "Add the updated report"
